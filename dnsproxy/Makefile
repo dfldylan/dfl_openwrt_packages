@@ -1,6 +1,5 @@
-# https://github.com/coolsnowwolf/packages.git^273a8a75987183cdba419def6b4bc0b688c49231
 # SPDX-License-Identifier: GPL-3.0-only
-#
+# https://github.com/immortalwrt/luci.git^d1323c38f0a1392b32561a652b714c6390e29614
 # Copyright (C) 2021 ImmortalWrt.org
 
 include $(TOPDIR)/rules.mk

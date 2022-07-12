@@ -1,4 +1,4 @@
-# https://github.com/coolsnowwolf/luci.git^e2af321e7b4851a2e7243a286889f9aa6fb0e63a
+# https://github.com/immortalwrt/luci.git^d1323c38f0a1392b32561a652b714c6390e29614
 # Copyright (C) 2021 ImmortalWrt
 # <https://immortalwrt.org>
 #

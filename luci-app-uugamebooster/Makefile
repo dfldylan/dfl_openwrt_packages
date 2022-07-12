@@ -1,8 +1,4 @@
-# Copyright (C) 2021 Openwrt.org
-# https://github.com/coolsnowwolf/luci.git^fbf4e872283131e8aad95fd971f8c382230db5e7
-# This is free software, licensed under the Apache License, Version 2.0 .
-#
-
+# https://github.com/immortalwrt/luci.git^d1323c38f0a1392b32561a652b714c6390e29614
 include $(TOPDIR)/rules.mk
 
 LUCI_TITLE:=LuCI support for UUgamebooster
@@ -10,8 +6,7 @@ LUCI_DEPENDS:=+uugamebooster
 LUCI_PKGARCH:=all
 
 PKG_NAME:=luci-app-uugamebooster
-PKG_VERSION:=1.0
-PKG_RELEASE:=8
+PKG_RELEASE:=$(COMMITCOUNT)
 
 include $(TOPDIR)/feeds/luci/luci.mk
 
