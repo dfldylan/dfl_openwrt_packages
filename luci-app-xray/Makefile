@@ -1,8 +1,8 @@
-# https://github.com/yichya/luci-app-xray.git^141bd7bbef460d52654d94650754df62d68d58ff
+# https://github.com/yichya/luci-app-xray.git^a6b4cbef4049c94b23f330adea52e67331adcac0
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-xray
-PKG_VERSION:=1.16.1
+PKG_VERSION:=1.17.1
 PKG_RELEASE:=1
 
 PKG_LICENSE:=MPLv2
@@ -102,6 +102,7 @@ endif
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-app-xray.json $(1)/usr/share/rpcd/acl.d/luci-app-xray.json
 	$(INSTALL_DIR) $(1)/usr/share/xray
+	$(LN) /var/run/xray.pid $(1)/usr/share/xray/xray.pid
 ifdef CONFIG_PACKAGE_XRAY_INFINITE_RETRY_ON_STARTUP
 	$(INSTALL_DATA) ./root/usr/share/xray/infinite_retry $(1)/usr/share/xray/infinite_retry
 endif
