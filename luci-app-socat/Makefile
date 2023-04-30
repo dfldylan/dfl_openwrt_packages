@@ -1,13 +1,13 @@
 # Copyright (C) 2020 Lienol <lawlienol@gmail.com>
-# https://github.com/Lienol/openwrt-package.git^9d7c178e21d5e2cceba0dcf254d46746e8d1e5cd
+# https://github.com/Lienol/openwrt-package.git^c5113f31aa517f6326c11acce25f87d9ef26115f
 # This is free software, licensed under the GNU General Public License v3.
 #
 
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-socat
-PKG_VERSION:=20200824
-PKG_RELEASE:=5
+PKG_VERSION:=20230129
+PKG_RELEASE:=1
 
 PKG_MAINTAINER:=Lienol <lawlienol@gmail.com>
 

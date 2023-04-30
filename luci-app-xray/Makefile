@@ -1,138 +1,61 @@
-# https://github.com/yichya/luci-app-xray.git^a6b4cbef4049c94b23f330adea52e67331adcac0
+# https://github.com/yichya/luci-app-xray.git^4b0969a2d0f04ccdee1f395bacc427767b7e2704
+#
+# Copyright 2020 Xingwang Liao <kuoruan@gmail.com>
+# Licensed to the public under the MIT License.
+#
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=luci-app-xray
-PKG_VERSION:=1.17.1
-PKG_RELEASE:=1
+PKG_VERSION:=1.0.2
+PKG_RELEASE:=0
 
-PKG_LICENSE:=MPLv2
-PKG_LICENSE_FILES:=LICENSE
-PKG_MAINTAINER:=yichya <mail@yichya.dev>
-PKG_BUILD_PARALLEL:=1
+PKG_LICENSE:=MIT
+PKG_MAINTAINER:=BI7PRK
 
-include $(INCLUDE_DIR)/package.mk
-
-define Package/$(PKG_NAME)
-	SECTION:=Custom
-	CATEGORY:=Extra packages
-	TITLE:=LuCI Support for Xray
-	DEPENDS:=+luci-base +xray-core +dnsmasq +ca-bundle +PACKAGE_firewall4:kmod-nft-tproxy +PACKAGE_firewall:ipset +PACKAGE_firewall:iptables +PACKAGE_firewall:iptables-mod-tproxy
-	PKGARCH:=all
-endef
-
-define Package/$(PKG_NAME)/description
-	LuCI Support for Xray (Client-side Rendered).
-endef
-
-define Package/$(PKG_NAME)/config
-menu "luci-app-xray Configuration"
-	depends on PACKAGE_$(PKG_NAME)
-
-config PACKAGE_XRAY_INCLUDE_CLOUDFLARE_ORIGIN_ROOT_CA
-	bool "Include Cloudflare Origin Root CA"
-	default n
-
-config PACKAGE_XRAY_INFINITE_RETRY_ON_STARTUP
-	bool "Retry infinitely on Xray startup (may solve some startup problems)"
-	default n
-
-config PACKAGE_XRAY_RLIMIT_NOFILE_LARGE
-	bool "Increase Max Open Files Limit (recommended)"
-	default y
-
-choice
-	prompt "Limit memory use by setting rlimit_data (experimental)"
-	default PACKAGE_XRAY_RLIMIT_DATA_UNLIMITED
-	config PACKAGE_XRAY_RLIMIT_DATA_UNLIMITED
-		bool "Not limited"
-	config PACKAGE_XRAY_RLIMIT_DATA_SMALL
-		bool "Small limit (about 50MB)"
-	config PACKAGE_XRAY_RLIMIT_DATA_LARGE
-		bool "Large limit (about 210MB)"
-endchoice
-
-endmenu
-endef
-
-define Build/Compile
-endef
-
-define Package/$(PKG_NAME)/postinst
-#!/bin/sh
-if [[ ! -f $${IPKG_INSTROOT}/usr/share/xray/xray.init.replaced ]]; then
-	if [[ ! -f $${IPKG_INSTROOT}/etc/init.d/xray ]]; then
-	    echo "echo This file does nothing" > $${IPKG_INSTROOT}/etc/init.d/xray
-	fi
-	mv $${IPKG_INSTROOT}/etc/init.d/xray $${IPKG_INSTROOT}/usr/share/xray/xray.init.replaced
-	mkdir -p $${IPKG_INSTROOT}/etc/config
-	mv $${IPKG_INSTROOT}/tmp/xray.conf $${IPKG_INSTROOT}/etc/config/xray
-fi
-rm -f $${IPKG_INSTROOT}/tmp/xray.conf
-mkdir -p $${IPKG_INSTROOT}/etc/init.d
-mv $${IPKG_INSTROOT}/tmp/xray.init $${IPKG_INSTROOT}/etc/init.d/xray
-if [[ -z "$${IPKG_INSTROOT}" ]]; then
-	if [[ -f /etc/uci-defaults/xray ]]; then
-		( . /etc/uci-defaults/xray ) && rm -f /etc/uci-defaults/xray
-	fi
-	rm -rf /tmp/luci-indexcache* /tmp/luci-modulecache
-fi
-exit 0
-endef
+LUCI_TITLE:=LuCI support for xray-core and v2ray-core
+LUCI_DEPENDS:=+jshn +ip +ipset +iptables +iptables-mod-tproxy +resolveip +dnsmasq-full
+LUCI_PKGARCH:=all
 
 define Package/$(PKG_NAME)/conffiles
 /etc/config/xray
+/etc/xray/transport.json
+/etc/xray/directlist.txt
+/etc/xray/proxylist.txt
 endef
 
-define Package/$(PKG_NAME)/install
-	$(INSTALL_DIR) $(1)/tmp
-	$(INSTALL_BIN) ./root/etc/init.d/xray $(1)/tmp/xray.init
-	$(INSTALL_DATA) ./root/etc/config/xray $(1)/tmp/xray.conf
-	$(INSTALL_DIR) $(1)/etc/luci-uploads/xray
-	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
-	$(INSTALL_DIR) $(1)/etc/ssl/certs
-ifdef CONFIG_PACKAGE_XRAY_INCLUDE_CLOUDFLARE_ORIGIN_ROOT_CA
-	$(INSTALL_DATA) ./root/etc/ssl/certs/origin_ca_ecc_root.pem $(1)/etc/ssl/certs/origin_ca_ecc_root.pem
-endif
-	$(INSTALL_DIR) $(1)/etc/uci-defaults
-	$(INSTALL_BIN) ./root/etc/uci-defaults/xray $(1)/etc/uci-defaults/xray
-	$(INSTALL_DIR) $(1)/www/luci-static/resources/view
-	$(INSTALL_DATA) ./root/www/luci-static/resources/view/xray.js $(1)/www/luci-static/resources/view/xray.js
-	$(INSTALL_DIR) $(1)/usr/share/luci/menu.d
-	$(INSTALL_DATA) ./root/usr/share/luci/menu.d/luci-app-xray.json $(1)/usr/share/luci/menu.d/luci-app-xray.json
-	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
-	$(INSTALL_DATA) ./root/usr/share/rpcd/acl.d/luci-app-xray.json $(1)/usr/share/rpcd/acl.d/luci-app-xray.json
-	$(INSTALL_DIR) $(1)/usr/share/xray
-	$(LN) /var/run/xray.pid $(1)/usr/share/xray/xray.pid
-ifdef CONFIG_PACKAGE_XRAY_INFINITE_RETRY_ON_STARTUP
-	$(INSTALL_DATA) ./root/usr/share/xray/infinite_retry $(1)/usr/share/xray/infinite_retry
-endif
-ifdef CONFIG_PACKAGE_XRAY_RLIMIT_NOFILE_LARGE
-	$(INSTALL_DATA) ./root/usr/share/xray/rlimit_nofile_large $(1)/usr/share/xray/rlimit_nofile
-endif
-ifdef CONFIG_PACKAGE_XRAY_RLIMIT_DATA_SMALL
-	$(INSTALL_DATA) ./root/usr/share/xray/rlimit_data_small $(1)/usr/share/xray/rlimit_data
-endif
-ifdef CONFIG_PACKAGE_XRAY_RLIMIT_DATA_LARGE
-	$(INSTALL_DATA) ./root/usr/share/xray/rlimit_data_large $(1)/usr/share/xray/rlimit_data
-endif
-ifdef CONFIG_PACKAGE_firewall
-	$(INSTALL_BIN) ./root/etc/hotplug.d/iface/01-transparent-proxy-ipset.fw3 $(1)/etc/hotplug.d/iface/01-transparent-proxy-ipset
-	$(INSTALL_BIN) ./root/usr/share/xray/gen_ipset_rules.lua $(1)/usr/share/xray/gen_ipset_rules.lua
-	$(INSTALL_BIN) ./root/usr/share/xray/gen_ipset_rules_extra_normal.lua $(1)/usr/share/xray/gen_ipset_rules_extra.lua
-	$(INSTALL_BIN) ./root/usr/share/xray/firewall_include.lua $(1)/usr/share/xray/firewall_include.lua
-	$(INSTALL_DATA) ./root/usr/share/xray/init.fw3 $(1)/usr/share/xray/init.firewall
-endif
-ifdef CONFIG_PACKAGE_firewall4
-	$(INSTALL_BIN) ./root/etc/hotplug.d/iface/01-transparent-proxy-ipset.fw4 $(1)/etc/hotplug.d/iface/01-transparent-proxy-ipset
-	$(INSTALL_DATA) ./root/usr/share/xray/include.nft $(1)/usr/share/xray/include.nft
-	$(INSTALL_DIR) $(1)/etc/nftables.d
-	$(LN) /usr/share/xray/include.nft $(1)/etc/nftables.d/99-xray.nft
-	$(INSTALL_BIN) ./root/usr/share/xray/firewall_include.uc $(1)/usr/share/xray/firewall_include.uc
-	$(INSTALL_DATA) ./root/usr/share/xray/init.fw4 $(1)/usr/share/xray/init.firewall
-endif
-	$(INSTALL_BIN) ./root/usr/share/xray/gen_config.lua $(1)/usr/share/xray/gen_config.lua
-	$(INSTALL_DIR) $(1)/usr/libexec/rpcd
-	$(INSTALL_BIN) ./root/usr/libexec/rpcd/xray $(1)/usr/libexec/rpcd/xray
+include $(TOPDIR)/feeds/luci/luci.mk
+
+define Package/$(PKG_NAME)/postinst
+#!/bin/sh
+
+if [ -z "$${IPKG_INSTROOT}" ] ; then
+	( . /etc/uci-defaults/40_luci-xray ) && rm -f /etc/uci-defaults/40_luci-xray
+
+	rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/
+
+	killall -HUP rpcd 2>/dev/null
+fi
+
+chmod 755 "/etc/init.d/xray" >/dev/null 2>&1
+
+ln -sf "/init.d/xray"  "/etc/rc.d/S99xray" >/dev/null 2>&1
+
+exit 0
 endef
 
-$(eval $(call BuildPackage,$(PKG_NAME)))
+define Package/$(PKG_NAME)/postrm
+#!/bin/sh
+
+if [ -s "/etc/rc.d/S99xray" ] ; then
+	rm -f "/etc/rc.d/S99xray"
+fi
+
+if [ -z "$${IPKG_INSTROOT}" ] ; then
+	rm -rf /tmp/luci-indexcache /tmp/luci-modulecache/
+fi
+
+exit 0
+endef
+
+# call BuildPackage - OpenWrt buildroot signature
